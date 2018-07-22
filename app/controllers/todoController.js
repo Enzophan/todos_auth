@@ -10,11 +10,27 @@ function getTodos (res) {
     });
 }
 
-module.exports = function (app) {
-    app.get ('/api/todos', function(req,res){
-        getTodos (res);
-
+var listTodos = function(req, res){
+    Todos.find (function (err, todos){
+        if (err) {
+            res.status(500).json(err);
+        }else {
+            res.json(todos);
+        }
     });
+};
+
+
+module.exports = function (app) {
+    var userHandlers = require ('../auth/userController.js');
+
+    app.route ('/api/todos')
+    .get(userHandlers.loginRequired, listTodos);
+
+    // app.get ('/api/todos', function(req,res){
+    //     getTodos (res);
+
+    // });
 
     app.get ('/api/todo/:id', function (req,res) {
         

@@ -9,6 +9,7 @@ var session      = require('express-session');
 var jwt = require('jsonwebtoken');  
 
 var configDB = require('./config/database.js');
+var User = require('./app/models/userModel');
 
 mongoose.connect(configDB.getDbConnectionString());
 
@@ -33,6 +34,21 @@ app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
 
+app.use(function(req, res, next){
+    if(req.headers && req.headers.authorization && req.headers.authorization.split(' ')[0] === 'JWT'){
+        jwt.verify(req.headers.authorization.split(' ')[1], 'RESTFULAPIs', function(err, decode){
+            if (err) 
+                req.userapi = undefined;
+                req.userapi = decode;
+                next();
+        });
+    } else {
+        req.userapi = undefined;
+        next();
+    }
+});
+
+require('./app/todosRoutes.js')(app);
 require('./app/routes.js')(app, passport);
 require('./config/passport')(passport);
 require ('./app/controllers/todoController')(app);
